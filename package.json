@@ -1,7 +1,7 @@
 {
   "name": "think-ls",
   "description": "think-ls",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": "xiaowu <fe.xiaowu@gmail.com>",
   "scripts": {
     "test": "mocha --reporter spec --timeout 5000 --recursive test/",

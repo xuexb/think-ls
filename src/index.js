@@ -24,6 +24,7 @@ export default class extends think.middleware.base {
      * @return {} []
      */
     async run(content) {
+        // 如果内容为空
         if (!content) {
             return content;
         }
@@ -36,6 +37,43 @@ export default class extends think.middleware.base {
             return content;
         }
 
+        // 用正则查找标签
+        const REG_TAG = new RegExp(options.open +'(.+?)'+ options.close, 'g');
+        const REG_TYPE_ID = new RegExp('(\\w+)\\([\'\"]([\\w_-]+)[\'\"]\\)');
+
+        // 如果没有开启则替换成link,script标签
+        if (this.config('ls.on') === false) {
+            // 使用配置而不是缓存
+            let ls_config = this.config('ls') || {};
+
+            return content.replace(REG_TAG, ($0, $1) => {
+                let data = $1.match(REG_TYPE_ID);
+
+                // 如果没有配置到或者没有配置ls
+                if (data === null || think.isEmpty(ls_config)) {
+                    return '';
+                }
+
+                let id = data[2];
+                let type = data[1];
+
+                // 如果没有配置{css:{}}或者{css:{id:{}}}
+                if (!ls_config[type] || !ls_config[type][id]) {
+                    return '';
+                }
+
+                let html;
+
+                if (type === 'js') {
+                    html = `<script src="${ls_config[type][id]}"></script>`;
+                } else {
+                    html = `<link rel="stylesheet" href="${ls_config[type][id]}" />`
+                }
+
+                return html;
+            });
+        }
+
         // 读取缓存数据
         let ls_data = await think.cache('ls_data');
 
@@ -44,40 +82,9 @@ export default class extends think.middleware.base {
             ls_data = await this.build();
         }
 
-        // 用正则查找标签
-        let reg = new RegExp(options.open +'(.+?)'+ options.close, 'g');
-
-        // 如果没有开始则替换成link,script标签
-        if (this.config('ls.on') === false) {
-            return content.replace(reg, ($0, $1) => {
-                var data = $1.match(/(\w+)\(['"]([\w_-]+)['"]\)/);
-
-                if (data === null) {
-                    return '';
-                }
-
-                let id = data[2];
-                let type = data[1];
-
-                if (!ls_data[type][id]) {
-                    return '';
-                }
-
-                let html;
-
-                if (data[1] === 'js') {
-                    html = `<script src="${ls_data[type][id].uri}"></script>`;
-                } else {
-                    html = `<link rel="stylesheet" href="${ls_data[type][id].uri}" />`
-                }
-
-                return html;
-            });
-        }
-
         // 替换内容
-        content = content.replace(reg, ($0, $1) => {
-            var data = $1.match(/(\w+)\(['"]([\w_-]+)['"]\)/);
+        content = content.replace(REG_TAG, ($0, $1) => {
+            let data = $1.match(REG_TYPE_ID);
 
             if (data === null) {
                 return '';
@@ -99,13 +106,13 @@ export default class extends think.middleware.base {
      * @return {string}      结果
      */
     get_ls_data(ls_data, id, type) {
-        let http = this.http;
-        let data = ls_data[type][id];
-
         // 如果没有配置这个id的数据
-        if (!data) {
+        if (!ls_data[type] || !ls_data[type][id]) {
             return '';
         }
+
+        let http = this.http;
+        let data = ls_data[type][id];
 
         // 获取cookie的值，对比版本号
         let cookie_data = http.cookie(type + '_'+ id);
@@ -152,6 +159,7 @@ export default class extends think.middleware.base {
         let config_ls = think.config('ls') || {};
         let data = config_ls[type];
 
+        // 如果没有配置
         if(think.isEmpty(data)){
             return result;
         }

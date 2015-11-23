@@ -29,16 +29,17 @@ view_filter: ['think-ls']
 
     // css配置
     css: {
-        // 以id对应uri路径的形式
-        id: 'uri'
+        // 以 id:uri路径 的形式, uri以 think.RESOURCE_PATH 为起始路径
+        id: '/static/dist/a.css'
     },
 
     // js配置
     js: {
-        id: 'uri'
+        id: '/static/dist/a.js',
+        global: '/static/dist/b.js'
     },
 
-    // 选项配置
+    // 可选配置
     options: {
         // 开始标签
         open: '{%',
@@ -68,6 +69,7 @@ view_filter: ['think-ls']
 > 主动编译一般在资源被修改后触发，这样可以把资源缓存起来，读取页面模板调用时可以快速判断版本并加载文件
 
 ```js
+// 该代码需要在thinkjs实例化后调用
 var ls = require('think-ls');
 new ls().build().then(function(a){
     console.log('编译ls结束~');

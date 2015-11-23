@@ -76,6 +76,11 @@ new ls().build().then(function(a){
 });
 ```
 
+## todo
+
+* 对远程(`http`)文件的支持，目前只支持在`think`目录里引用
+* `think.cache`调用的优化，目前所有的配置都在一个`cache`里，由于多个`css,js`的`source`可能很大，后续考虑以`css.key`来存放
+
 ## LICENSE
 
 MIT

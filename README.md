@@ -1,6 +1,6 @@
 # think-ls
 
-> 方便的使用`localstorage`存放静态资源
+> 方便的使用`localstorage`存放静态资源，思路点这里：[设计localStorage更新](https://xuexb.com/html/286.html)
 
 ## 使用
 

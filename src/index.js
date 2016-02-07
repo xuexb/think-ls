@@ -18,14 +18,15 @@ export default class extends think.middleware.base {
     options = {
         open: '<%',
         close: '%>'
-    }
+    };
+
     /**
      * run
      * @return {} []
      */
     async run(content) {
         // 如果内容为空
-        if (!content) {
+        if (!content || !content.length) {
             return content;
         }
 
@@ -33,13 +34,14 @@ export default class extends think.middleware.base {
         let options = think.extend({}, this.options, this.config('ls.options') || {});
 
         // 快速查找内容里有没有替换标签
-        if (content.indexOf(options.open) === -1) {
+        if (content.indexOf(options.open) === -1 || content.indexOf(options.close) === -1) {
             return content;
         }
 
         // 用正则查找标签
         const REG_TAG = new RegExp(options.open +'(.+?)'+ options.close, 'g');
-        const REG_TYPE_ID = new RegExp('(\\w+)\\([\'\"]([\\w_-]+)[\'\"]\\)');
+        const REG_TYPE_ID = new RegExp('(css|js)\\([\'\"]([\\w_-]+)[\'\"]\\)');
+
 
         // 如果没有开启则替换成link,script标签
         if (this.config('ls.on') === false) {
@@ -47,6 +49,10 @@ export default class extends think.middleware.base {
             let ls_config = this.config('ls') || {};
 
             return content.replace(REG_TAG, ($0, $1) => {
+                if (think.isEmpty(ls_config)) {
+                    return '';
+                }
+
                 let data = $1.match(REG_TYPE_ID);
 
                 // 如果没有配置到或者没有配置ls
